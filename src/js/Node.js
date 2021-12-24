@@ -34,6 +34,7 @@ import {
 } from './util'
 import { translate } from './i18n'
 import { DEFAULT_MODAL_ANCHOR } from './constants'
+import { Base64 } from 'js-base64';
 
 /**
  * @constructor Node
@@ -2237,7 +2238,7 @@ export class Node {
 
       const escapedField = this._escapeHTML(fieldText)
       if (
-        document.activeElement !== domField &&
+        document.activeElement !== domField ||
         escapedField !== this._unescapeHTML(getInnerText(domField))
       ) {
         // only update if it not has the focus or when there is an actual change,
@@ -2256,7 +2257,7 @@ export class Node {
       } else {
         const escapedValue = this._escapeHTML(this.value)
         if (
-          document.activeElement !== domValue &&
+          document.activeElement !== domValue ||
           escapedValue !== this._unescapeHTML(getInnerText(domValue))
         ) {
           // only update if it not has the focus or when there is an actual change,
@@ -2581,7 +2582,7 @@ export class Node {
             // if read-only, we use the regular click behavior of an anchor
             if (isUrl(this.value)) {
               event.preventDefault()
-              window.open(this.value, '_blank', 'noreferrer')
+              window.open(this.value, '_blank', 'noopener')
             }
           }
           break
@@ -2749,7 +2750,7 @@ export class Node {
       if (target === this.dom.value) {
         if (!this.editable.value || event.ctrlKey) {
           if (isUrl(this.value)) {
-            window.open(this.value, '_blank', 'noreferrer')
+            window.open(this.value, '_blank', 'noopener')
             handled = true
           }
         }
@@ -3887,7 +3888,22 @@ export class Node {
             Node.onDuplicate(node)
           }
         })
-
+        
+        // base64 to utf-8
+        items.push({
+          text: translate('convertToString'),
+          title: translate('duplicateField'),
+          className: 'jsoneditor-duplicate',
+          click: function () {
+            if(Base64.isValid(node.value)) {
+              node.value = "bytes//" + Base64.decode(node.value)
+              node.editor.refresh()
+            } else {
+              alert(translate("invalidBase64String"))
+            }
+          }
+        })
+        
         // create remove button
         items.push({
           text: translate('removeText'),
@@ -4354,8 +4370,8 @@ Node.onDragEnd = (nodes, event) => {
   const editor = firstNode.editor
 
   // set focus to the context menu button of the first node
-  if (firstNode && firstNode.dom.menu) {
-    firstNode.dom.menu.focus()
+  if (nodes[0]) {
+    nodes[0].dom.menu.focus()
   }
 
   const oldParentPath = editor.drag.oldParent.getInternalPath()
@@ -4453,12 +4469,7 @@ Node._findSchema = (topLevelSchema, schemaRefs, path, currentSchema = topLevelSc
   const nextPath = path.slice(1, path.length)
   const nextKey = path[0]
 
-  let possibleSchemas = [currentSchema]
-  for (const subSchemas of [currentSchema.oneOf, currentSchema.anyOf, currentSchema.allOf]) {
-    if (Array.isArray(subSchemas)) {
-      possibleSchemas = possibleSchemas.concat(subSchemas)
-    }
-  }
+  const possibleSchemas = currentSchema.oneOf || currentSchema.anyOf || currentSchema.allOf || [currentSchema]
 
   for (const schema of possibleSchemas) {
     currentSchema = schema
@@ -4482,12 +4493,7 @@ Node._findSchema = (topLevelSchema, schemaRefs, path, currentSchema = topLevelSc
         if (schemaUrl in schemaRefs) {
           const referencedSchema = schemaRefs[schemaUrl]
           const reference = { $ref: '#/'.concat(relativePath) }
-          const auxNextPath = []
-          auxNextPath.push(nextKey)
-          if (nextPath.length > 0) {
-            auxNextPath.push(...nextPath)
-          }
-          return Node._findSchema(referencedSchema, schemaRefs, auxNextPath, reference)
+          return Node._findSchema(referencedSchema, schemaRefs, nextPath, reference)
         } else {
           throw Error(`Unable to resolve reference ${ref}`)
         }
