@@ -2,7 +2,6 @@
 *.iml
 .vscode
 build
-dist
 downloads
 node_modules
 *.zip
