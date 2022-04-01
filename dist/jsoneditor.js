@@ -25,7 +25,7 @@
  *
  * @author  Jos de Jong, <wjosdejong@gmail.com>
  * @version 9.5.9
- * @date    2021-12-27
+ * @date    2022-04-01
  */
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -4751,7 +4751,8 @@ var _defs = {
     expandTitle: '点击 展开/收缩 该字段(Ctrl+E). \n' + 'Ctrl+Click 展开/收缩 包含所有子节点.',
     formatTitle: '使用适当的缩进和换行符格式化JSON数据 (Ctrl+I)',
     invalidBase64String: "不是合法的Base64编码字符串，不可转换",
-    convertToString: '转string',
+    convertToString: '转Utf8String',
+    showNodePath: "查看节点路径",
     insert: '插入',
     insertTitle: '在此字段前插入类型为“auto”的新字段 (Ctrl+Ins)',
     insertSub: '选择要插入的字段类型',
@@ -10349,6 +10350,7 @@ var Node = /*#__PURE__*/function () {
       this.updateDom({
         recurse: false
       });
+      console.log("expand success");
     }
     /**
      * Collapse this node and optionally its childs.
@@ -13731,6 +13733,29 @@ var Node = /*#__PURE__*/function () {
             node._onInsertBefore('', '', 'auto');
           },
           submenu: insertSubmenu
+        }); // 查看节点路径
+
+        items.push({
+          text: (0,i18n/* translate */.Iu)('showNodePath'),
+          title: (0,i18n/* translate */.Iu)('duplicateField'),
+          className: 'jsoneditor-duplicate',
+          click: function click() {
+            var pathList = node.getPath();
+            var jsonPath = "";
+            pathList.forEach(function (p) {
+              if (!isNaN(p)) {
+                jsonPath = jsonPath.slice(0, jsonPath.length - 1) + '[' + p + '].';
+              } else {
+                jsonPath += p + ".";
+              }
+            });
+
+            if (typeof node.editor.options.onShowNodePath === 'function') {
+              node.editor.options.onShowNodePath(pathList);
+            } else {
+              alert(jsonPath.slice(0, jsonPath.length - 1));
+            }
+          }
         });
 
         if (this.editable.field) {
@@ -13744,18 +13769,21 @@ var Node = /*#__PURE__*/function () {
             }
           }); // base64 to utf-8
 
-          items.push({
-            text: (0,i18n/* translate */.Iu)('convertToString'),
-            title: (0,i18n/* translate */.Iu)('duplicateField'),
-            className: 'jsoneditor-duplicate',
-            click: function click() {
-              if (gBase64.isValid(node.value)) {
+          if (gBase64.isValid(node.value)) {
+            items.push({
+              text: (0,i18n/* translate */.Iu)('convertToString'),
+              title: (0,i18n/* translate */.Iu)('duplicateField'),
+              className: 'jsoneditor-type-string',
+              click: function click() {
                 node.value = "bytes//" + gBase64.decode(node.value);
                 node.editor.refresh();
-              } else {
-                alert((0,i18n/* translate */.Iu)("invalidBase64String"));
               }
-            }
+            });
+          } // create a separator
+
+
+          items.push({
+            type: 'separator'
           }); // create remove button
 
           items.push({
@@ -16529,6 +16557,7 @@ treemode._createFrame = function () {
 
     expandAll.onclick = function () {
       editor.expandAll();
+      console.log("expand all success");
     };
 
     this.menu.appendChild(expandAll); // create collapse all button

@@ -792,6 +792,7 @@ export class Node {
 
     // update the css classes of table row, and fire onClassName etc
     this.updateDom({ recurse: false })
+    console.log("expand success")
   }
 
   /**
@@ -3878,6 +3879,29 @@ export class Node {
         submenu: insertSubmenu
       })
 
+      // 查看节点路径
+      items.push({
+        text: translate('showNodePath'),
+        title: translate('duplicateField'),
+        className: 'jsoneditor-duplicate',
+        click: function () {
+          var pathList = node.getPath()
+          var jsonPath = ""
+          pathList.forEach((p) => {
+            if (!isNaN(p)) {
+              jsonPath = jsonPath.slice(0, jsonPath.length - 1) + '[' + p + '].'
+            } else {
+              jsonPath += p + "."
+            }
+          })
+          if(typeof node.editor.options.onShowNodePath === 'function') {
+            node.editor.options.onShowNodePath(pathList)
+          } else {
+            alert(jsonPath.slice(0, jsonPath.length - 1))
+          }
+        }
+      })
+      
       if (this.editable.field) {
         // create duplicate button
         items.push({
@@ -3890,20 +3914,21 @@ export class Node {
         })
         
         // base64 to utf-8
-        items.push({
-          text: translate('convertToString'),
-          title: translate('duplicateField'),
-          className: 'jsoneditor-duplicate',
-          click: function () {
-            if(Base64.isValid(node.value)) {
+        if(Base64.isValid(node.value)) {
+          items.push({
+            text: translate('convertToString'),
+            title: translate('duplicateField'),
+            className: 'jsoneditor-type-string',
+            click: function () {
               node.value = "bytes//" + Base64.decode(node.value)
               node.editor.refresh()
-            } else {
-              alert(translate("invalidBase64String"))
             }
-          }
+           })
+        }
+        // create a separator
+        items.push({
+          type: 'separator'
         })
-        
         // create remove button
         items.push({
           text: translate('removeText'),
