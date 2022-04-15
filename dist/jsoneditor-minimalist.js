@@ -25,7 +25,7 @@
  *
  * @author  Jos de Jong, <wjosdejong@gmail.com>
  * @version 9.5.9
- * @date    2022-04-01
+ * @date    2022-04-15
  */
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -4744,7 +4744,8 @@ var _defs = {
     expandTitle: '点击 展开/收缩 该字段(Ctrl+E). \n' + 'Ctrl+Click 展开/收缩 包含所有子节点.',
     formatTitle: '使用适当的缩进和换行符格式化JSON数据 (Ctrl+I)',
     invalidBase64String: "不是合法的Base64编码字符串，不可转换",
-    convertToString: '转Utf8String',
+    convertToString: '转UTF-8',
+    convertToGBK: '转GBK',
     showNodePath: "查看节点路径",
     insert: '插入',
     insertTitle: '在此字段前插入类型为“auto”的新字段 (Ctrl+Ins)',
@@ -13772,6 +13773,21 @@ var Node = /*#__PURE__*/function () {
                 node.editor.refresh();
               }
             });
+          } // base64 to gbk
+
+
+          if (gBase64.isValid(node.value)) {
+            items.push({
+              text: (0,i18n/* translate */.Iu)('convertToGBK'),
+              title: (0,i18n/* translate */.Iu)('duplicateField'),
+              className: 'jsoneditor-type-array',
+              click: function click() {
+                var array = gBase64.toUint8Array(node.value);
+                var str = new TextDecoder("gbk").decode(array);
+                node.value = "bytes//" + str;
+                node.editor.refresh();
+              }
+            });
           } // create a separator
 
 
@@ -16550,7 +16566,6 @@ treemode._createFrame = function () {
 
     expandAll.onclick = function () {
       editor.expandAll();
-      console.log("expand all success");
     };
 
     this.menu.appendChild(expandAll); // create collapse all button

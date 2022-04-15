@@ -35,6 +35,7 @@
     "jsonrepair": "^2.2.1",
     "mobius1-selectr": "^2.4.13",
     "picomodal": "^3.0.0",
+    "text-encoding": "^0.7.0",
     "vanilla-picker": "^2.12.1"
   },
   "devDependencies": {

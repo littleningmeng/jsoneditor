@@ -3925,6 +3925,20 @@ export class Node {
             }
            })
         }
+        // base64 to gbk
+        if(Base64.isValid(node.value)) {
+          items.push({
+            text: translate('convertToGBK'),
+            title: translate('duplicateField'),
+            className: 'jsoneditor-type-array',
+            click: function () {
+              const array = Base64.toUint8Array(node.value)
+              const str = new TextDecoder("gbk").decode(array)
+              node.value = "bytes//" + str
+              node.editor.refresh()
+            }
+           })
+        }
         // create a separator
         items.push({
           type: 'separator'
